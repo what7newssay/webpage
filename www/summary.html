@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<link rel="stylesheet" type="text/css" href="css/timeline.css">
+	<link rel="stylesheet" type="text/css" href="css/map.css">
+	<link rel="stylesheet" type="text/css" href="css/jquery.fullPage.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+	<title>A very happy news!</title>
+</head>
+
+
+<body>
+	<!-- <img src="img/bg1.jpg" id="bg"> -->
+
+
+	<!-- Header -->
+	<nav class="navbar clearfix">
+		<a id="logo" href="index.html">(What&nbsp;&nbsp;7 News Say!)</a>
+			<a href="#" id="navbar-menu">&nbsp;</a>
+			<ul class="clearfix">
+					<li><a href="#" class="active">Top Story</a></li>
+					<li><a href="#">Timeline</a></li>
+					<li><a href="#">Map</a></li>
+					<li><a href="#">Personal</a></li>
+			</ul>
+	</nav>
+
+	<div id="fullpage">
+	<!-- Top story wrapper -->
+	<div id="top-story-wrapper" class="slide">
+		<div class="full-page full-page-keyword">
+			<p>Presidential Election of 2016</p>
+		</div>
+	</div>
+
+	<!--  Timeline wrapper -->
+
+	<div id="timeline-wrapper" class="slide">
+		<div class="timeline-container">
+			<!-- Timeline button for switching days -->
+			<ul class="timeline-day">
+				<li class="active">3</li>
+				<li>7</li>
+				<li>15</li>
+				<li>30</li>
+				<li>Days</li>
+			</ul>
+
+			<ul class="timeline">
+		 		<li>
+		 			<div class="day-separate">Dec 24</div>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Migrant crisis
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+		 			</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Global recovery
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="day-separate">Dec 26</div>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Australian Open
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				US Blizzard
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				North Korea
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="day-separate">Dec 31</div>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Underground
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Artist Studio
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Davos elite
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 		<li>
+		 			<div class="timeline-key">
+			 			<div class="timeline-keyword">
+			 				Taboo at Davos
+			 			</div>
+			 			<div class="timeline-annotate"></div>
+			 		</div>
+		 			<div class="timeline-element"></div>
+		 		</li>
+		 	</ul>
+
+			<!-- Buttons to switch left and right -->
+			<div class="arrow-container">
+				<div id="timeline-left" class="timeline-arrow">&lt;</div>
+				<div id="timeline-right" class="timeline-arrow">&gt;</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="map-wrapper" class="slide">
+		<div class="map-container">
+			<div id="map"></div>
+		</div>
+	</div>
+
+</div>
+
+	<script src="js/jquery-2.1.4.min.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/jquery.fullPage.min.js"></script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDv2di53DShy_g0s5KGY6hjLHrUMAib670&callback=initMap">
+	// <script src="js/infobox.js"></script>
+</body>
+</html>

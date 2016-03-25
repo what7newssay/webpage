@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<HTML>
+   <HEAD>
+      <TITLE>
+        Google Map API Test
+      </TITLE>
+	  <style type="text/css">
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #map { height: 50%;max-width: 50%}
+	  #clearMarker-panel {
+		position: absolute;
+		top: 10px;
+		left: 24%;
+		z-index: 5;
+		background-color: #fff;
+		padding: 5px;
+		border: 1px solid #999;
+		text-align: center;
+		font-family: 'Roboto','sans-serif';
+		line-height: 30px;
+		padding-left: 10px;
+		}
+	  #3Days-panel {
+		position: absolute;
+		top: 10px;
+		left: 25%;
+		z-index: 5;
+		background-color: #fff;
+		padding: 5px;
+		border: 1px solid #999;
+		text-align: center;
+		font-family: 'Roboto','sans-serif';
+		line-height: 30px;
+		padding-left: 10px;
+		}
+		#5Days-panel {
+		position: absolute;
+		top: 10px;
+		left: 26%;
+		z-index: 5;
+		background-color: #fff;
+		padding: 5px;
+		border: 1px solid #999;
+		text-align: center;
+		font-family: 'Roboto','sans-serif';
+		line-height: 30px;
+		padding-left: 10px;
+		}
+    </style>
+
+   </HEAD>
+<BODY>
+   <H1>Introduction</H1>
+   <P>This is very minimal Google Map API</P>
+   <div id="clearMarker-panel">
+      <button id="clear-all" onclick="clearMarkers()">Clear</button>
+     </div>
+   <div id="3Days-panel">
+      <button id="3Days-drop" onclick="threeDaysFilter()">3Days</button>
+     </div>
+	 <div id="week-panel">
+      <button id="week-drop" onclick="weekFilter()">Week</button>
+     </div>
+
+   
+    <div id="map"></div>
+    <script type="text/javascript">
+	var map;
+	var markers = []; 
+	
+		//!!!MarkerGenLineStart
+	var markList = [
+		[30.6586	, 104.0647, 1, 'Chengdu\n\nChendu panda born two childs!'],
+		[22.303, 114.175, 10, 'Hong Kong\n\nHong Kong University of Sience and Techonology is regarded as University of Stress and Tension'],
+		[15.6586	, 160.0647, 3, 'Chicago\n\nChicago Bull Wins again!'],
+		[21.6586	, 224.0647, 5, 'Hong Kong\n\nHong Kong is independent!'],
+	];
+		//!!!MakerGenLineEnd
+	function initMap() {
+	
+	var myLatLng = {lat: 22.303, lng: 114.175};
+
+	  map = new google.maps.Map(document.getElementById('map'), {
+		center: {lat: 22.303, lng: 114.010},
+		zoom: 1
+	  });
+		
+
+		
+		
+		for(var index = 0 ; index < markList.length; index++)
+		{
+			var marker = new google.maps.Marker({
+			position: {lat: markList[index][0], lng: markList[index][1]},
+			map: map,
+			title: markList[index][3],
+			lable: markList[index][2],
+			animation: google.maps.Animation.DROP
+			}); 
+			markers.push(marker);
+		}
+		
+		/*
+		var marker = new google.maps.Marker({
+		position: myLatLng,
+		map: map,
+		title: 'Hello World!'
+		});
+		*/
+		//loadScript("test1.js",marker1);
+		/*
+		var marker1 = new google.maps.Marker({
+		position: {lat: 22.303, lng: 114.000},
+		map: map,
+		title: 'Hong Kong'
+		}); 
+		
+		var marker = new google.maps.Marker({
+					position: {lat: markList[index][0], lng: markList[index][1]},
+					map: map,
+					title: markList[index][3],
+					lable: markList[index][2],
+					animation: google.maps.Animation.DROP
+		
+		*/
+	}
+
+	
+	function threeDaysFilter() {
+	  resetMarkers();
+		for(var i=0; i<markList.length; i++)
+		{
+			//console.log("This is out of " + i);
+			if(markList[i][2]>3)
+			{
+				markers[i].setMap(null);
+			}
+		}
+	}
+	
+	function weekFilter() {
+	  resetMarkers();
+		for(var i=0; i<markList.length; i++)
+		{
+			//console.log("This is out of " + i);
+			if(markList[i][2]>7)
+			{
+				markers[i].setMap(null);
+			}
+		}
+	}
+
+
+	function clearMarkers() {
+	  for (var i = 0; i < markers.length; i++) {
+		markers[i].setMap(null);
+	  }
+	  //markers = [];
+	}
+	
+	function resetMarkers() {
+	 for (var i = 0; i < markers.length; i++) {
+		markers[i].setMap(map);
+	  }
+	}
+
+	/*
+	function addMarker(lat_, lng_, title_) {
+	  var marker = new google.maps.Marker({
+		position: {lat: lat_, lng: lng_},
+		map: map
+		title: title_
+	  });
+	}*/
+
+	 </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDv2di53DShy_g0s5KGY6hjLHrUMAib670&callback=initMap">
+	  </script>
+	  <script type="text/javascript">
+		</script>
+    </BODY>
+</HTML>

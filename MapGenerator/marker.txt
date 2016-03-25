@@ -1,0 +1,29 @@
+***************StartingLine******************
+China
+30.6586	
+104.0647
+1
+Chengdu
+Chendu panda born two childs!
+***************CheckingLine******************
+Hong Kong
+22.303
+114.175
+10
+Hong Kong
+Hong Kong University of Sience and Techonology is regarded as University of Stress and Tension
+***************CheckingLine******************
+USA
+15.6586	
+160.0647
+3
+Chicago
+Chicago Bull Wins again!
+***************CheckingLine******************
+Hong Kong
+21.6586	
+224.0647
+5
+Hong Kong
+Hong Kong is independent!
+***************EndingLine******************
