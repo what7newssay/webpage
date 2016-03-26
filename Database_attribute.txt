@@ -13,6 +13,7 @@ geolocation				MEDIUMTEXT
 image_top				MEDIUMTEXT
 images					MEDIUMTEXT
 keywordsRaw				MEDIUMTEXT
+topicID					VARCHAR(32)
 
 ********************************************
 
@@ -21,6 +22,8 @@ uniqueID				VARCHAR(32)
 title					MEDIUMTEXT
 content					LONGTEXT			
 topicID					VARCHAR(32)
+similarity				DOUBLE
+updateDate				DATE
 
 ********************************************
 
