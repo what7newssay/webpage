@@ -1,0 +1,32 @@
+++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++
+Database :: NewsDatabase
+
+Table :: originalArt
+uniqueID				VARCHAR(32)
+title					MEDIUMTEXT
+path					MEDIUMTEXT
+keywords_title			MEDIUMTEXT
+keywords_complex		MEDIUMTEXT	
+publish_date				DATE
+geolocation				MEDIUMTEXT
+image_top				MEDIUMTEXT
+images					MEDIUMTEXT
+keywordsRaw				MEDIUMTEXT
+
+********************************************
+
+Table :: summarizedArt
+uniqueID				VARCHAR(32)
+title					MEDIUMTEXT
+content					LONGTEXT			
+topicID					VARCHAR(32)
+
+********************************************
+
+Table :: topic
+topicID					VARCHAR(32)
+name					MEDIUMTEXT
+score					INT
++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++
