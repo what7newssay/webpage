@@ -16,10 +16,10 @@ list_of_useless_regex = [
     'Advertisement Continue reading the main story',
     'Image copyright',
     'Image caption',
-    'Hide Caption [0-9]+ of [0-9]+ [0-9]+ photos:'
+    'Hide Caption [0-9]+ of [0-9]+[ ]*',
+    '[ ]*[0-9]+ photos:',
     ]
-Hide Caption 7 of 22 22 photos:
-t2 = re.sub('Hide Caption [0-9]+ of [0-9]+ [0-9]+ photos', '', t)
+
 def clean_text(text):
     for regex in list_of_useless_regex:
         text = re.sub(regex, '', text)
