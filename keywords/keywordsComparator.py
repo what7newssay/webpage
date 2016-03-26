@@ -6,21 +6,30 @@ from nltk.corpus import genesis
 genesis_ic = wn.ic(genesis, False, 0.0)
 import keywordsComparator
 
+def abs_value(val):
+    if val<0:
+        return -val
+    return val
 def title_similarity(s1, s2):
     wlist1 = string_to_wordlist(s1)
     wlist2 = string_to_wordlist(s2)
 #     print wlist1
 #     print wlist2
-    num_max = max(len(wlist1), len(wlist2))
+    num_max = max([len(wlist1), len(wlist2)])
+    if num_max == 0:
+        return False
     strong_num = 0
     for each1 in wlist1:
         for each2 in wlist2:
             a = keywordsComparator.sim_all_cal(each1, each2)
             if a >=0.7:
-                print 'The similar words in title are ', each1, ' and ', each2, ' @ ', a
+#                 print 'The similar words in title are ', each1, ' and ', each2, ' @ ', a
                 strong_num +=1
-    print 'strong_num is ', strong_num, ' and num_max is ', num_max
-    print
+#     print 'strong_num is ', strong_num, ' and num_max is ', num_max
+#     print
+#     if num_max = 0:
+#         return False
+#     print 'The debug data is S.N ', strong_num,' div ', num_max, ' @ ', s1,' AND ', s2
     if (strong_num / num_max ) > 0.7:
         return True
     return False
@@ -37,19 +46,74 @@ def cal_similarity(s1, s2):
         for each2 in wlist2:
             a = keywordsComparator.sim_all_cal(each1, each2)
             if a >= 1.0:
-                total_score += a * 50.0 #* 60 / num_word
+                total_score += a * 50.0 * 100 / num_word
                 strong_num += 3
                 break
             if a>0.8:
                 strong_num += 1
                 total_score += a * 30.0 #* 15 / num_word
             elif a>0.6:
-                total_score += a * 20.0
+                total_score += a * 10.0
             else:
                 total_score += a * 1.0
-    return total_score * strong_num / (((num_word  - strong_num)+0.1)/2) / com_word#(len(wlist1) + len(wlist2))
+#     return total_score * strong_num / com_word
+    return total_score * strong_num / ((abs_value(num_word - strong_num)+0.1)/2) / com_word#(len(wlist1) + len(wlist2))
+
+
+
+def fast_compare(s1, s2, g1, g2):
+    wlist1 = string_to_wordlist(s1)
+    wlist2 = string_to_wordlist(s2)
+    geolist1 = string_to_wordlist(g1)
+    geolist2 = string_to_wordlist(g2)
+    num_word = len(wlist1) + len(wlist2) 
+    same_word_count = 0
+    same_geo_count = 0
+    for each1 in wlist1:
+        if each1 in wlist2:
+            same_word_count += 1
+    if same_word_count >=(int(num_word/10)+1):
+        print 'fast_compare->Fast comparator (KEYWORDS) returns TRUE, continue this article'
+        return True
+    
+    for each1 in geolist1:
+        if each1 in geolist2:
+            print 'fast_compare->Fast comparator (GEOLOCATION) returns TRUE, continue this article'
+            return True
+    
+    
+    a =0.0
+    short_list_1 = []
+    short_list_2 = []
+#     index = 0
+#     for each in wlist1:
+#         short_list_1.append(each)
+#         if index == 2:
+#             break
+#         index+=1
+#     index = 0
+#     for each in wlist2:
+#         short_list_1.append(each)
+#         if index == 2:
+#             break
+#         index +=1
+    if len(wlist1)<3 or len(wlist2)<3:
+        print 'fast_compare->Fast comparator (INSUFFICIENT) returns TRUE, continue this article'
+        return True
+    short_list_1 = [wlist1[0],wlist1[1],wlist1[2]]
+    short_list_2 = [wlist2[0],wlist2[1],wlist2[2]]
+    for each1 in short_list_1:
+        for each2 in short_list_2:
+           if wup_sim_cal(each1, each2) > 0.6:
+               print 'fast_compare->Fast comparator (WUP CAL) returns TRUE, continue this article'
+               return True
+    print 'fast_compare->Fast comparator returns False, skip this article!!!!!!'
+    return False
+
+
 
 #    Make string to list, by skipping ",", last string is ignored
+#    Eliminating duplicated key
 def string_to_wordlist(str):
     words = str.split(",")
     words.pop()
@@ -134,6 +198,8 @@ def lch_sim_cal(word1, word2):
         return 0.2
     elif a>=0:
         return 0
+
+
 
 #    WUP similarity calculation, 1st
 def wup_sim_cal(word1, word2):

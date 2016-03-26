@@ -61,14 +61,14 @@ def updateDB(data, path):
 	keywordsTitleData = keywordsExtractor.extract_title(title)
 	keywords_title = ""
 	for each in keywordsTitleData:
-		keywords_title+= each
+		keywords_title+= re.sub('[^0-9a-zA-Z\,\s]+','', each)
 		keywords_title+= ","
 	
 	keywordsTextData = keywordsExtractor.extractKeyphrases(data['text'])
 	keywordsComplexData = (keywordsTitleData + keywordsExtractor.ifin(keywordsTextData,keywordsTitleData))
 	keywordsComplex = ""
 	for each in keywordsExtractor.makeSingleString(keywordsComplexData):
-		keywordsComplex+= each
+		keywordsComplex+= re.sub('[^0-9a-zA-Z\,\s]+','', each)
 		keywordsComplex+=","
 	keywordsRaw = ""
 	for each in data['keywords']:
@@ -146,43 +146,84 @@ def readJson(filepath):
 	
 
 def read_news_files():
-	folder_path_to_read = '/home/zhengzhenggao/ServerWeb/articles/original'
+#	The second path is for topic test
+# 	folder_path_to_read = '/home/zhengzhenggao/ServerWeb/articles/original'
+	folder_path_to_read = '/home/peter/workspace/ReadJson/topic'
 
-	for year in os.listdir(folder_path_to_read):
-		if int(year) < NewsReader.yearLimit:
-			continue
-		firstLevelPath = os.path.join(folder_path_to_read, year)
-# 			print firstLevelPath
-		if os.path.isdir(firstLevelPath):
-			for month in os.listdir(firstLevelPath):
-				secondLevelPath = os.path.join(firstLevelPath, month)
-# 					print secondLevelPath
-				if os.path.isdir(secondLevelPath):
-					for day in os.listdir(secondLevelPath):
-						thirdLevelPath = os.path.join(secondLevelPath, day)
-						for obj in os.listdir(thirdLevelPath):
-							forthLevelPath = os.path.join(thirdLevelPath, obj)
-							if obj.endswith(".json"):
-								readJson(forthLevelPath)
-								print "A .json object, filename is ", obj, " at ", day, " in ", month," IN ", year
-							else:
-								print "Not a .json object.... skip, the file name is ", obj, " at ", day," in ", month," IN ", year
+##################################################################################################
+# Topic test only
+	for top in os.listdir(folder_path_to_read):
+		topLevelPath = os.path.join(folder_path_to_read, top)
+		for year in os.listdir(topLevelPath):
+			if int(year) < NewsReader.yearLimit:
+				continue
+			firstLevelPath = os.path.join(topLevelPath, year)
+	# 			print firstLevelPath
+			if os.path.isdir(firstLevelPath):
+				for month in os.listdir(firstLevelPath):
+					secondLevelPath = os.path.join(firstLevelPath, month)
+	# 					print secondLevelPath
+					if os.path.isdir(secondLevelPath):
+						for day in os.listdir(secondLevelPath):
+							thirdLevelPath = os.path.join(secondLevelPath, day)
+							for obj in os.listdir(thirdLevelPath):
+								forthLevelPath = os.path.join(thirdLevelPath, obj)
+								if obj.endswith(".json"):
+									readJson(forthLevelPath)
+									print "A .json object, filename is ", obj, " at ", day, " in ", month," IN ", year
+								else:
+									print "Not a .json object.... skip, the file name is ", obj, " at ", day," in ", month," IN ", year
+				else:
+						print "Second level : Unidentified file detected!"
+						continue
 			else:
-					print "Second level : Unidentified file detected!"
-					continue
-		else:
-			print "Top level : Unidentified file error!"
-			continue			
+				print "Top level : Unidentified file error!"
+				continue	
 
+
+
+
+################################################################################################
+# 	for year in os.listdir(folder_path_to_read):
+# 		if int(year) < NewsReader.yearLimit:
+# 			continue
+# 		firstLevelPath = os.path.join(folder_path_to_read, year)
+# # 			print firstLevelPath
+# 		if os.path.isdir(firstLevelPath):
+# 			for month in os.listdir(firstLevelPath):
+# 				secondLevelPath = os.path.join(firstLevelPath, month)
+# # 					print secondLevelPath
+# 				if os.path.isdir(secondLevelPath):
+# 					for day in os.listdir(secondLevelPath):
+# 						thirdLevelPath = os.path.join(secondLevelPath, day)
+# 						for obj in os.listdir(thirdLevelPath):
+# 							forthLevelPath = os.path.join(thirdLevelPath, obj)
+# 							if obj.endswith(".json"):
+# 								readJson(forthLevelPath)
+# 								print "A .json object, filename is ", obj, " at ", day, " in ", month," IN ", year
+# 							else:
+# 								print "Not a .json object.... skip, the file name is ", obj, " at ", day," in ", month," IN ", year
+# 			else:
+# 					print "Second level : Unidentified file detected!"
+# 					continue
+# 		else:
+# 			print "Top level : Unidentified file error!"
+# 			continue			
+###########################################################################################################
 
 def printStatus():
 	print "The total number of news read is ", NewsReader.totalNewsRead	
+
+
+def main():
+	read_news_files()
+	printStatus()
+	print ("readArticle.Main->End of function")
 	
 if __name__ == '__main__':
     #test()
-#	main()
-    read_news_files()
-    printStatus()
-    print ("end of function")
+	main()
+     
+	print ("readArticle.Main->End of function")
 	
 	
