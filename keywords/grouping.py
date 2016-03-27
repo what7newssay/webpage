@@ -7,47 +7,16 @@ genesis_ic = wn.ic(genesis, False, 0.0)
 import keywordsComparator
 import mysql.connector
 import copy
-
-
-# for word1 in list1:
-#     for word2 in list2:
-#         wordFromList1 = wordnet.synsets(word1)
-#         wordFromList2 = wordnet.synsets(word2)
-#         if wordFromList1 and wordFromList2: #Thanks to @alexis' note
-#             for each1 in wordFromList1:
-#                 for each2 in wordFromList2:
-#                     s = each1.wup_similarity(each2)
-#                     list.append(s)
-# 
-# print(max(list))
-# hit = wn.synsets('hit', pos=wn.VERB)
-# slap = wn.synsets('hit', pos=wn.VERB)
-# 
-# for each1 in hit:
-#     for each2 in slap:
-#         s = each1.lch_similarity(each2)
-#         list.append(s)
-# hit = wn.synsets('hit', pos=wn.NOUN)
-# slap = wn.synsets('slap', pos=wn.NOUN)
-# for each1 in hit:
-#     for each2 in slap:
-#         s = each1.lch_similarity(each2)
-#         list.append(s)
-# print (max(list))
-
-# dog.lin_similarity(cat, semcor_ic)
-
-# hit = wn.synsets('cat', pos=wn.VERB)
-# slap = wn.synsets('kitten', pos=wn.VERB)
-# 
-# for each1 in hit:
-#     for each2 in slap:
-#         s = each1.lin_similarity(each2, semcor_ic)
-#         list.append(s)
+#################################################################################
+# Database variable
+DBuser = 'WebAdmin'
+DBpass = 'helloworld7'
+DBhost = '127.0.0.1'
+#################################################################################
 
 def get_group_art():
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
     print "get_art_DB->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -58,8 +27,8 @@ def get_group_art():
     return selectData
 
 def get_topic_art(topicID):
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
     print "get_art_DB->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -71,8 +40,8 @@ def get_topic_art(topicID):
     return selectData
 
 def get_art_DB(uniqueID):
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
     print "get_art_DB->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -83,9 +52,12 @@ def get_art_DB(uniqueID):
     return selectData
 
 def get_other_art(art_list):
+    #    Get article list from originalArt table only if it is not in art_list
+    #    Datastructure in art_list:
+    #    [uniqueID,uniqueID,......] all members are uniqueID
     get_list =[]
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
     print "get_ungroup_art->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -100,8 +72,11 @@ def get_other_art(art_list):
     return get_list
 
 def get_ungroup_art(force_group):
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    #    Get all articles that is ungrouped or nogroup
+    #    With TRUE parameter: all no group articles will be forced to check for new group
+    #    With FALSE parameter: all new articles will be checked for group
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
     print "get_ungroup_art->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -115,6 +90,11 @@ def get_ungroup_art(force_group):
     return selectData
 
 def find_sim_art(selectData):
+    #    Find similar articles in selectData
+    #    selectData is full table of originalArt
+    #    The datastructure is the same as in originalArt table
+    #    This will set no group articles to no group: i.e. the topicID will be set to FFFFFFFF
+    #    Return art_list that contains similar articles
     selectData_to = list(selectData)
     selectData_to.pop(0)
     art_list = []
@@ -210,6 +190,8 @@ def find_sim_art(selectData):
 
 
 def remove_art_from_list(artID,artList):
+    #    Remove a article based on artID (uniqueID), as long as each in artList
+    #    contains each[0] as uniqueID, then usable
     result = []
     switcher = True
     for each in artList:
@@ -223,6 +205,10 @@ def remove_art_from_list(artID,artList):
 
 
 def recal_sim_group(art_list):
+    #    Recalculate all similarities between articles in art_list
+    #    
+    #    Datastructure in art_list
+    #    [topicID, uniqueID, similarityValue]
     result_list = art_list
     print result_list
     process_list = []
@@ -275,8 +261,13 @@ def recal_sim_group(art_list):
     
     
 def update_group_art(art_list):
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    #    Update the database base base on art_list
+    #    The data structure in art_list
+    #    [[topicID,uniqueID,similarityValue],[topicID,uniqueID,similarityValue],..]
+    #    usually lead article, the article with uniqueID itself as topicID, is not included in art_list
+    #    update the lead article first
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
     print "update_group_art->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -331,10 +322,12 @@ def update_group_art(art_list):
     cnx.close()
     return
     
-    
 def update_nogroup_art(uniqueID):
-    cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+    #    Update the database
+    #    Assign article as uniqueID to database as nogroup articles
+    #    Nogroup articles with 0 similarity and FFFFF...  in topicID
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
 #     print "update_nogroup_art->Database connection successful!"
     newsDBcursor = cnx.cursor()
@@ -354,9 +347,17 @@ def update_nogroup_art(uniqueID):
     cnx.close()
 
 def update_group_new_art(art_list):
+    #    Update the database base on art_list
+    #    Preprocess for update_group_art()
+    #    Data structure of art_list
+    #    [[topicID,uniqueID,SimilarityValue]]
+    #    Attention!!!!!!:
+    #    Only one article in art_list AND the article in art_list is a list in a list
+    
     update_art_list = []
     groupArt = get_topic_art(art_list[0])
     value_arr = []
+    value_arr.append(art_list[2])
     this_art = get_art_DB(art_list[1])
     
     for each in groupArt:
@@ -376,10 +377,13 @@ def update_group_new_art(art_list):
     cur_art_key = [art_list[0],this_art[0],max_value]
     update_art_list.append(cur_art_key)
     update_group_art(update_art_list)
-            
+    return
 
-# The function to group all new articles, resort them into exist topic if availiable
+
+
 def group_art_new():
+    #    The function to group all new articles, resort them into exist topic if available
+    #    One time program, all article are sorted after this process
     ungroupArt = get_ungroup_art(force_group = True)
     if len(ungroupArt)==0:
         print 'group_art_new->No new news articles found!'
@@ -397,8 +401,9 @@ def group_art_new():
             art_list = []
 #             print each1
             w1 = each1[3] + each1[4]
-            
+            cur_max_value = 0.0
             # Check grouped articles for grouping
+            num_remain_group_art = len(groupArt)
             for each2 in groupArt:
                 cur_art = []
                 if keywordsComparator.title_similarity(each1[3], each2[3]):
@@ -406,6 +411,7 @@ def group_art_new():
     #                 print 'The title is ', each1[1], ' and ', each2[1]
 #                     print 'group_art_new-> Inside title_similarity'
                     cur_art = [each2[0],each1[0],5000]
+                    art_list[:] = []
                     art_list.append(cur_art)
                     break
                 w2 = each2[3] + each2[4]
@@ -422,13 +428,17 @@ def group_art_new():
                     print 'The weighted score is: ', a, "for ", w1
                     print " and ", w2
                     cur_art = [each2[0],each1[0],a]
-                    art_list.append(cur_art)
-                    break
+                    if cur_max_value < a:
+                        art_list[:] = []
+                        art_list.append(cur_art)
+                    
+                    continue
                 ######################################################################################################
-            
+                print 'group_art_new-> Checking grouped articles, there are ',num_remain_group_art,' grouped articles remaining~'
+                num_remain_group_art-=1
             # If group similar article found, do this, then remove from ungroupArt, continue
             if len(art_list)!=0:
-                print 'group_art_new-> before update_group_new_art, the art_list is ',art_list
+#                 print 'group_art_new-> before update_group_new_art, the art_list is ',art_list
                 update_group_new_art(art_list[0])
                 ungroupArt.pop(0)
                 groupArt = get_group_art()
@@ -436,26 +446,31 @@ def group_art_new():
             
             
             # Still no similar art, nogroup
-            if len(art_list)==0:
-                update_nogroup_art(each1[0])
-                ungroupArt.pop(0)
-                break
-
+#             if len(art_list)==0:
+#                 update_nogroup_art(each1[0])
+#                 ungroupArt.pop(0)
+#                 break
+        print 'group_art_new-> Check grouped articles, there are ',len(ungroupArt),' remaining~'
         # While loop end from here, iteration is needed
+    
     # Try to find group in all ungrouped articles
-    ungroupArt = ungroupArt = get_ungroup_art(force_group = False)
+    ungroupArt = get_ungroup_art(force_group = False)
+    print 'group_art_new-> After checked with grouped articles, there are ',len(ungroupArt),' remaining~'
     while len(ungroupArt)!= 0: 
         groupArtList = find_sim_art(ungroupArt)
         recal_sim_group(groupArtList)
         
         ungroupArt = get_ungroup_art(force_group = False)
-        
+        print 'group_art_new-> Checked with UNgrouped : ',len(ungroupArt),' remaining~'
+    
+    print 'group_art_new-> All new articles are grouped, end of group_art_new'
     return
     
-    
 
-# The function to group all articles, clean database to group, very long time   
+ 
 def group_art_all():
+    #    The function to group all articles, clean database to group, very long time
+    #    Normally use to group for a whole new database
     ungroupArt = get_ungroup_art(force_group = False)
     while len(ungroupArt)!= 0: 
         groupArtList = find_sim_art(ungroupArt)
