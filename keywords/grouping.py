@@ -1,12 +1,14 @@
 from nltk.corpus import wordnet as wn
 from nltk.corpus import wordnet_ic
+from datetime import date
 brown_ic = wordnet_ic.ic('ic-brown.dat')
 semcor_ic = wordnet_ic.ic('ic-semcor.dat')
 from nltk.corpus import genesis
 genesis_ic = wn.ic(genesis, False, 0.0)
 import keywordsComparator
 import mysql.connector
-import copy
+import datetime
+
 #################################################################################
 # Database variable
 DBuser = 'WebAdmin'
@@ -144,8 +146,10 @@ def find_sim_art(selectData):
     
     print 'Starting find deeper similar articles'
     
+    #    art_list should be [[topicID, uniqueID, value],[topicID, uniqueID, value],..]
+    
     ID_list = []
-    ID_list.append(art_list[0])
+    ID_list.append(art_list[0][0])
     for each in art_list:
         ID_list.append(each[1])
     otherArt_list = get_other_art(ID_list)
@@ -185,6 +189,15 @@ def find_sim_art(selectData):
             ######################################################################################################
             
                
+    # Debug only
+#     print '*************************************find_sim_art'
+#     for each in art_list:
+#         print '*************************************'
+#         print   
+#         print each
+#         print
+#         print
+#     print '**************************************'
     
     return art_list
 
@@ -210,7 +223,6 @@ def recal_sim_group(art_list):
     #    Datastructure in art_list
     #    [topicID, uniqueID, similarityValue]
     result_list = art_list
-    print result_list
     process_list = []
     if len(art_list)<=1 :
         update_group_art(result_list)
@@ -226,6 +238,7 @@ def recal_sim_group(art_list):
     print process_list
 #     process_list_to.pop(0)
     process_count = 0
+    
     for each1 in process_list:
         value_arr = []
         ori_value = result_list[process_count][2]
@@ -272,13 +285,21 @@ def update_group_art(art_list):
     print "update_group_art->Database connection successful!"
     newsDBcursor = cnx.cursor()
     
- 
-    checkQuery = ("""UPDATE summarizedArt SET topicID= %s, similarity = %s, updateDate = NOW() WHERE uniqueID = %s;""")
+    # Debug only
+#     print '*************************************'
+#     for each in art_list:
+#         print '*************************************'
+#         print   
+#         print each
+#         print
+#         print
+#     print '**************************************'
+    checkQuery = ("""UPDATE summarizedArt SET topicID= %s, similarity = %s, updateDate = CURDATE() WHERE uniqueID = %s;""")
     dataQuery = (art_list[0][0],art_list[0][2],art_list[0][0])
     try:
         newsDBcursor.execute(checkQuery, dataQuery)
         cnx.commit()
-        print 'update_group_art-> Update summarizedArt successful! @ ', art_list[0][0]
+        print 'update_group_art-> Update summarizedArt for main topic holder successful! @ ', art_list[0][0]
         
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))
@@ -289,7 +310,7 @@ def update_group_art(art_list):
     try:
         newsDBcursor.execute(checkQuery, dataQuery)
         cnx.commit()
-        print 'update_group_art-> Update originalArt successful! @ ', art_list[0][0]
+        print 'update_group_art-> Update originalArt for main topic holder successful! @ ', art_list[0][0]
     except mysql.connector.Error as e:
         print 'update_group_art -> Update originalArt for main topic holder FAILED!!!!!'
     
@@ -298,7 +319,7 @@ def update_group_art(art_list):
     for each in art_list:
         if each[2] <0:
             continue
-        checkQuery = ("""UPDATE summarizedArt SET topicID= %s, similarity = %s, updateDate = NOW() WHERE uniqueID = %s;""")
+        checkQuery = ("""UPDATE summarizedArt SET topicID= %s, similarity = %s, updateDate = CURDATE() WHERE uniqueID = %s;""")
         dataQuery = (each[0],each[2],each[1])
         try:
             newsDBcursor.execute(checkQuery, dataQuery)
@@ -306,7 +327,7 @@ def update_group_art(art_list):
             print 'update_group_art-> Update summarizedArt successful! @ ', each[1]
         except mysql.connector.Error as e:
             print("Something went wrong: {}".format(e))
-            print 'update_group_art -> Update summarizedArt for art_list member topic holder FAILED!!!!!'
+            print 'update_group_art -> Update summarizedArt for art_list member\'s topic  FAILED!!!!!'
             print '@ ', each[1]
         
         checkQuery = ("""UPDATE originalArt SET topicID= %s WHERE uniqueID = %s;""")
@@ -317,7 +338,7 @@ def update_group_art(art_list):
             print 'update_group_art-> Update originalArt successful! @ ', each[1]
         except mysql.connector.Error as e:
             print("Something went wrong: {}".format(e))
-            print 'update_group_art -> Update originalArt for art_list member topic holder FAILED!!!!!'
+            print 'update_group_art -> Update originalArt for art_list member\'s topic FAILED!!!!!'
             print '@ ', each[1]
     cnx.close()
     return
@@ -329,7 +350,7 @@ def update_nogroup_art(uniqueID):
     cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
                                  host = DBhost,
                                  database='NewsDatabase')
-#     print "update_nogroup_art->Database connection successful!"
+    print "update_nogroup_art->Database connection successful!"
     newsDBcursor = cnx.cursor()
     checkQuery = ("""UPDATE originalArt SET topicID='FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' WHERE uniqueID = %s;""")
     dataQuery = (uniqueID,)
@@ -379,6 +400,128 @@ def update_group_new_art(art_list):
     update_group_art(update_art_list)
     return
 
+def remove_topic(topicID):
+    
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
+                                 database='NewsDatabase')
+    print "refresh_topic_table->Database connection successful!"
+    newsDBcursor = cnx.cursor()
+    checkQuery = ("""UPDATE summarizedArt SET topicID='FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',similarity = 0 WHERE topicID = %s""")
+    try:
+        newsDBcursor.execute(checkQuery, (topicID,))
+        cnx.commit()
+        print 'remove_topic-> Update summarizedArt successful~ @ ', topicID
+    except mysql.connector.Error as e:
+            print("Something went wrong: {}".format(e))
+            print 'remove_topic -> Update summarizedArt for ',topicID,' FAILED!!!!!'
+    
+    newsDBcursor = cnx.cursor()
+    checkQuery = ("""UPDATE originalArt SET topicID='FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',similarity = 0 WHERE topicID = %s""")
+    try:
+        newsDBcursor.execute(checkQuery, (topicID,))
+        cnx.commit()
+        print 'remove_topic-> Update originalArt successful~ @ ', topicID
+    except mysql.connector.Error as e:
+            print("Something went wrong: {}".format(e))
+            print 'remove_topic -> Update originalArt for ',topicID,' FAILED!!!!!'
+    
+    newsDBcursor = cnx.cursor()
+    checkQuery = ("""DELETE FROM topic WHERE topicID = %s;""")
+    try:
+        newsDBcursor.execute(checkQuery, (topicID,))
+        cnx.commit()
+        print 'remove_topic-> Delete topic successful~ @ ', topicID
+    except mysql.connector.Error as e:
+            print("Something went wrong: {}".format(e))
+            print 'remove_topic -> Update topic for ',topicID,' FAILED!!!!!'
+    
+    return True
+
+
+def refresh_topic_table():
+    cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
+                                 database='NewsDatabase')
+    print "refresh_topic_table->Database connection successful!"
+    newsDBcursor = cnx.cursor()
+    checkQuery = ("""SELECT * FROM summarizedArt""")
+    newsDBcursor.execute(checkQuery)
+    summarizedArt = newsDBcursor.fetchall()
+    #    Check if no articles at all
+    if not summarizedArt:
+        print "refresh_topic_table-> No articles in Database"
+        return
+    # Topic data is list, [[topicID, num_of_articles],[topicID, num_of_articles],..]
+    topic_data = []
+    for each in summarizedArt:
+        cur_topicID = each[3]
+        found_enrty = False
+        for each_topic in topic_data:
+            if each_topic[0] == cur_topicID:
+                each_topic[1] += 1
+                found_enrty = True
+                break
+        if not found_enrty:
+            newlist = [cur_topicID, 1]
+            topic_data.append(newlist)
+ 
+        
+#         # First entry to topic_data
+#         if not topic_data:
+#             newlist = [cur_topicID, 1]
+#             topic_data.append(newlist)
+#             continue
+#         # Check whether this id exits, if yes
+#         for sub_list in topic_data:
+#             if cur_topicID == sub_list[0]:
+#                 sub_list[1] += 1
+#                 continue
+#             else:
+#                 newlist = [cur_topicID, 1]
+#                 topic_data.append(newlist)
+    
+    print 'refresh_topic_table-> Do database update'
+    print topic_data
+    for each in topic_data:
+        #    Check if there is junk entry
+        if each[1]<=1:
+            remove_topic(each[0])
+        else:
+            topic_name = get_topic_name(each[0])
+            checkQuery = ("""SELECT * FROM topic WHERE topicID = %s""")
+            newsDBcursor.execute(checkQuery,(each[0],))
+            selectData = newsDBcursor.fetchone()
+            if not selectData:  #    There is no this topicID, insert one
+                checkQuery = ("""INSERT INTO NewsDatabase.topic """
+                              """(topicID, name, numArt, score, entryDate, updateDate) """
+                        """VALUES (%s,      %s,   %s,     %s,    CURDATE(),  CURDATE());""")
+#                 date = datetime.date.today()
+                dataQuery = (each[0],topic_name, each[1],0)
+                try:
+                    newsDBcursor.execute(checkQuery,dataQuery)
+                    cnx.commit()
+                except mysql.connector.Error as e:
+                    print("Something went wrong: {}".format(e))
+                    print "refresh_topic_table-> Insert new topic entry FAILED!!!! @ ", each[0],' @ ', topic_name
+                    
+            else:   #    Current topic entry exists, update it as well
+                checkQuery = ("""UPDATE topic SET name = %s, numArt = %s WHERE topicID = %s;""")
+                dataQuery = (topic_name, each[1])
+                try:
+                    newsDBcursor.execute(checkQuery,dataQuery)
+                    cnx.commit()
+                except mysql.connector.Error as e:
+                    print("Something went wrong: {}".format(e))
+                    print "refresh_topic_table-> Update old topic entry FAILED!!!! @ ", each[0],' @ ', topic_name
+    return
+
+def get_topic_name(topicID):
+    topic_name = ''
+    #    Temporary topic name for topicID holder 's title
+    topic_art = get_art_DB(topicID)
+    topic_name = topic_art[1]
+    return topic_name
 
 
 def group_art_new():
@@ -443,7 +586,9 @@ def group_art_new():
                 ungroupArt.pop(0)
                 groupArt = get_group_art()
                 break
-            
+            else:
+                ungroupArt.pop(0)
+             
             
             # Still no similar art, nogroup
 #             if len(art_list)==0:
@@ -465,8 +610,6 @@ def group_art_new():
     
     print 'group_art_new-> All new articles are grouped, end of group_art_new'
     return
-    
-
  
 def group_art_all():
     #    The function to group all articles, clean database to group, very long time
@@ -483,36 +626,8 @@ def group_art_all():
 # Test main function
 if __name__ == '__main__':
     
-    group_art_new()
-    
-#     ungroupArt = get_ungroup_art(force_group = True)
-#     groupArtList = find_sim_art(ungroupArt)
-#     print groupArtList
-#     recal_sim_group(groupArtList)
-#     ungroupArt = get_ungroup_art(force_group = False)
-#     while len(ungroupArt)!= 0:
-#         
-#         groupArtList = find_sim_art(ungroupArt)
-#         recal_sim_group(groupArtList)
-#         
-#         ungroupArt = get_ungroup_art(force_group = False)
-#         
-#     
-#     
+#     group_art_new()
+    refresh_topic_table()
     print ("end of function")
 
-
-
-# Similar example
-# w1 = "Bottega,Veneta,Fall,Milan,Fashion,Week,diary,Coverage,Russ,McClintock,"
-# w2 = "Milan,Fashion,Week,Dsquared2,Fall,diary,Coverage,Russ,McClintock,"
-# 
-# w1 = "amazing,sports,photos,29,Paris,terror,attacks,college,football,game,Hide,Caption,moment,Marcell,Mercedes,Sophie,Tempe,Doha,Bernier,Lewis,Malcolm,timeout,volleyball,Giginoglu,perform,points,truck,Jenkins,Alexis,SMU,Reynolds,Maple,Smith,cornerback,McKeehen,title,pass,rebound,Gathers,England,Washington,touchdown,Grand,Maryland,Iowa,Prix,Holm,Hamilton,linebacker,Baylor,basketball,Zach,Tuesday,light,Robertson,win,Ateman,teammate,fight,York,Philadelphia,City,Qatar,Annapolis,Thursday,player,Utah,Louis,Zealand,receiver,driver,St,Park,Rousey,race,victory,Arizona,NFL,yards,Navy,career,season,tournament,NHL,quarterback,State,event,Kentucky,record,Saturday,New,Friday,Sunday,Hide,November,Caption,shot,"
-# w2 = "amazing,sports,photos,37,San,Jose,State,college,basketball,game,Hide,Caption,wide,receiver,Suarez,driver,Hawaii,Kentucky,Dante,Mikael,leaps,Mirco,playoff,class,South,Alec,Houston,Major,Whitfield,Alexander,Mexico,Hertha,MX,Pogba,Wasps,Emirates,races,teeth,Chen,Roger,Sprint,Reynolds,Marathon,Mississippi,defenders,go,defender,title,Connecticut,pass,Dubai,Toluca,Dural,New,York,Washington,Radionova,team,Busch,play,Chepstow,Red,Carolina,Prix,Berlin,McIlroy,Adelaide,Kansas,win,Los,Alvarez,Ohio,shoots,California,forward,Memphis,tournament,Detroit,competition,Beamer,player,record,Grand,face,Virginia,field,Angeles,end,center,Philadelphia,compete,United,Tour,pounds,event,Florida,Tuesday,receiver,Cup,Dallas,kilograms,season,Michigan,Columbus,football,home,Friday,World,Thursday,goal,NHL,match,Sunday,Saturday,Hide,Caption,shot,November,"
-# Not similar example
-# w1 = "farm,breeds,bullfrogs,Singapore,farm,breeds,adults-only,elixir,Royal,Hashima,Dessert,Jurong,Frog,Farm,Traditional,Chinese,Medicine,American,bullfrogs,Jackson,Wan,life,cycle,data,tradition,refreshing,Ginseng,age,counter,disease,kilogram,supermarkets,concrete,paradigm,tubes,trade,texture,level,affect,stage,benefits,contains,number,size,system,lungs,populations,figure,protein,species,puberty,hormones,fruit,blood,egg,skin,children,health,meat,year,life,recommend,cycle,don,time,Jackson,Bickford,drink,Wan,be,American,hashima,"
-# w2 = "public,housing,Luxury,hotel,Singapore-style,things,make,amount,parts,Provident,Minister,projects,pension,buildings,practice,blocks,plans,director,CNN,hawker,Kampung,squatter,center,light,changer,resale,profit,costs,mass,Yew,Northshore,Trust,gardens,surge,centers,window,bedrooms,get,put,climate,buzz,residents,open,lot,construction,developments,include,room,project,Development,communal,development,models,Skyville,plan,Residents,building,rule,apartments,years,Hassell,government,HDB,flats,"
-
-# a = keywordsComparator.cal_similarity(w1, w2)
-# print ('The weighted score is: ', a)
 
