@@ -1,4 +1,27 @@
 newspaper_dev README, __author__ = 'Chun-kit YEUNG'
+
+simply run the program via the command:
+
+Ubuntu:
+$ python3 newsBuilder.py
+
+Windows:
+> python newsBuilder.py
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ======================================
 A new program, geoExtractor, have been created to extract location information of a news.
 
