@@ -30,6 +30,9 @@ updateDate				DATE
 Table :: topic
 topicID					VARCHAR(32)
 name					MEDIUMTEXT
+numArt					INT
 score					INT
+entryDate				DATE
+updateDate				DATE
 +++++++++++++++++++++++++++++++++++++++++++++++++
 +++++++++++++++++++++++++++++++++++++++++++++++++
