@@ -27,7 +27,6 @@ class Extractor(object):
 			if type(ne) is nltk.tree.Tree:
 				#['GPE', 'PERSON', 'ORGANIZATION']
 				if ne.label() in ['GPE']:
-					print (ne)
 					self.places.append(u' '.join(i[0] for i in ne.leaves()))
 	
 	def get_entities_with_count(self):
@@ -36,6 +35,16 @@ class Extractor(object):
 			entities_count[ne] += 1 
 
 		return entities_count
+
+
+def get_locations(input_str, num_of_locations = 3):
+	extractor = Extractor(text = input_str)
+	extractor.find_entities()
+	ranks = extractor.get_entities_with_count().most_common(num_of_locations)
+	locations = []
+	for rank in ranks:
+		locations.append(rank[0])
+	return locations
 
 
 
