@@ -50,7 +50,8 @@ def clean_text(text, target = 'text'):
         text = re.sub(regex, '', text)
     return text
     
-
+def clean_img():
+    pass
 
 def process_and_save_article(article, news_brand=""):
     #set publish_date in case of None
