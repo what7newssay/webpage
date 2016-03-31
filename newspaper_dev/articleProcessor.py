@@ -11,7 +11,7 @@ import geoExtractor as geoEx
 import summaryExtractor as sumEx
 #from bson import json_util
 
-LIST_OF_TEXT_USELESS_REGEX = [
+LIST_OF_USELESS_TEXT_REGEX = [
     'Advertisement Continue reading the main story',
     'Image copyright.*Image caption',
     'Image copyright',
@@ -24,9 +24,14 @@ LIST_OF_TEXT_USELESS_REGEX = [
     
 LIST_OF_IMG_USELESS_REGEX = [
     'static\.bbci\.co\.uk.*',
+    'edition\.i\.cdn\.cnn\.com.*',
+    'ewn\.co\.za/site/design.*',
 ]
 
-
+CLEAN_TARGET_LIST = [
+    'text': LIST_OF_USELESS_TEXT_REGEX
+    'image': LIST_OF_IMG_USELESS_REGEX
+]
 
 
 SUMMARY_METHODS_LIST = [ 
@@ -39,13 +44,13 @@ SUMMARY_METHODS_LIST = [
     'kl',
 ]
 
-def clean_text(text):
-    for regex in LIST_OF_USELESS_REGEX:
+def clean_text(text, target = 'text'):
+    useless_list = CLEAN_TARGET_LIST[target]
+    for regex in useless_list:
         text = re.sub(regex, '', text)
-
     return text
+    
 
-def clean_image(img)
 
 def process_and_save_article(article, news_brand=""):
     #set publish_date in case of None
@@ -56,7 +61,7 @@ def process_and_save_article(article, news_brand=""):
         article.publish_date = today
 
     #clean article text
-    article.text = clean_text(text = article.text)
+    article.text = clean_text(text = article.text, target = 'text')
     article.summary = clean_text(text = article.summary)
 
     #save the file
