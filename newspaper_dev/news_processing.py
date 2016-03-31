@@ -11,18 +11,18 @@ import re
 from langdetect import detect
 from langdetect import lang_detect_exception
 import geoExtractor 
+import uuid
 #from bson import json_util
-list_of_useless_regex = [
+list_of_useless_text = [
     'Advertisement Continue reading the main story',
-    'Image copyright',
-    'Image caption',
-    'Hide Caption [0-9]+ of [0-9]+[ ]*',
-    '[ ]*[0-9]+ photos:',
+    'Image copyright AP Image caption'
     ]
 
+downloadAllArticles = False
+
 def clean_text(text):
-    for regex in list_of_useless_regex:
-        text = re.sub(regex, '', text)
+    for useless_text in list_of_useless_text:
+        text = text.replace(useless_text, '')
 
     return text
 
@@ -42,6 +42,9 @@ def get_serialized_article_obj(article):
     s_a['publish_date'] = article.publish_date
     s_a['summary'] = article.summary 
     s_a['source_url'] = article.source_url
+    # Database variable, additional variables
+    s_a['unique_id'] = uuid.uuid4().hex
+
 
     return s_a
 
@@ -63,7 +66,7 @@ def get_path_to_save(article):
     t = article.publish_date
     filename = get_article_filename(article.title)
     #the base path
-    path_to_save = './data'
+    path_to_save = '/home/zhengzhenggao/ServerWeb/articles/original'
     
     path_to_save = os.path.join(path_to_save, str(t.year))
     path_to_save = os.path.join(path_to_save, str(t.month))
@@ -109,10 +112,10 @@ def build_news_source():
 
     #papers = [newspaper.build(paper_url, memoize_articles=False) for paper_url in paper_urls]
 
-    papers = [newspaper.build(paper_url) for paper_url in paper_urls]
+    papers = [newspaper.build(paper_url, memoize_articles = (not downloadAllArticles)) for paper_url in paper_urls]
     return papers
 
-def process_and_save_article(article, news_brand=""):
+def process_and_save_article(article, news_brand):
     if article.publish_date is None:
         #today date
         today = time.time()
@@ -140,7 +143,7 @@ def build_articles(news_sources):
                 article.build()
                 article_lang = detect(article.text)
                 if article_lang == 'en':
-                    #articles.append(article)
+                    articles.append(article)
                     process_and_save_article(article = article, news_brand = paper.brand)
                     print ("{0}-{1}".format(i,size), "Yes-en:", article.url)
             except (newspaper.article.ArticleException, lang_detect_exception.LangDetectException):
@@ -162,8 +165,6 @@ def save_to_json(news_source):
             data = serialize_artcile(article)
             data['news source'] = source
             articles[article.url] = data
-
-
     PATH_TO_SAVE = os.path.join(os.path.abspath('./'), 'bbc_articles.json')
     with codecs.open(PATH_TO_SAVE, 'w', 'utf-8') as f:
         f.write(json.dumps(articles, indent=4, default=to_json))
@@ -172,7 +173,7 @@ def save_to_json(news_source):
 def to_json(obj):
     if isinstance(obj, datetime.datetime):
         return {'__class__': 'datetime',
-                '__value__': obj.isoformat()}
+                '__value__': obj.strftime("%Y-%m-%d")}#obj.isoformat()}
     elif isinstance(obj, set):
         return list(obj)
     
@@ -201,20 +202,14 @@ def test_save_article_function():
 def test():
     #url = 'http://money.cnn.com/2016/02/26/investing/warren-buffett-berkshire-hathaway-annual-shareholder-letter/index.html?section=money_topstories'
     #url = 'http://www.bbc.com/hindi/sport/2016/02/160227_heart_change_for_kohli_fan_dil'
-    #url = 'http://www.bbc.com/news/world-europe-35828810'
+    url = 'http://www.bbc.com/news/world-europe-35828810'
     #url = 'http://fox13now.com/2013/12/30/new-year-new-laws-obamacare-pot-guns-and-drones/'
-    url = 'http://www.nytimes.com/2016/03/19/world/europe/dubai-airliner-crashes-while-trying-to-land-at-russian-airport.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=first-column-region&region=top-news&WT.nav=top-news&_r=1'
-    print ("building:", url)
     a = Article(url)
     a.build()
-    process_and_save_article(a)
 
-    print ("first paragraph")
-    print (a.text.split('\n')[0])
-    print ("Summary:")
-    print (a.summary)
+    loc = get_news_location(a, num_of_location=3)
+    print (loc)
 
-    
     
     try:
         print (detect(a.text))
@@ -227,6 +222,6 @@ def main():
     news_articles = build_articles(news_sources)
 
 if __name__ == '__main__':
-    test()
-    #main()
+    #test()
+    main()
     print ("end of function")

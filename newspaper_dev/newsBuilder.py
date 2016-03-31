@@ -15,7 +15,8 @@ NEWS_SOURCES_URLS = [
 
 def build_news_source(news_sources_urls = NEWS_SOURCES_URLS):
     print ("building news sources")
-    news_sources = [newspaper.build(paper) for paper in news_sources_urls]
+    #news_sources = [newspaper.build(paper) for paper in news_sources_urls]
+    news_sources = [newspaper.build(paper,  memoize_articles=False) for paper in news_sources_urls]
     
     return news_sources
 

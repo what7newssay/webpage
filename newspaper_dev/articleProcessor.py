@@ -9,6 +9,7 @@ import datetime
 import re
 import geoExtractor as geoEx
 import summaryExtractor as sumEx
+import uuid
 #from bson import json_util
 
 LIST_OF_USELESS_TEXT_REGEX = [
@@ -28,19 +29,19 @@ LIST_OF_IMG_USELESS_REGEX = [
     'ewn\.co\.za/site/design.*',
 ]
 
-CLEAN_TARGET_LIST = [
-    'text': LIST_OF_USELESS_TEXT_REGEX
-    'image': LIST_OF_IMG_USELESS_REGEX
-]
+CLEAN_TARGET_LIST = {
+    'text': LIST_OF_USELESS_TEXT_REGEX,
+    'image': LIST_OF_IMG_USELESS_REGEX,
+}
 
 
 SUMMARY_METHODS_LIST = [ 
     'luhn',
     'edmundson',
     'lsa',
-    'text-rank',
-    'lex-rank',
-    'sum-basic',
+    'text_rank',
+    'lex_rank',
+    'sum_basic',
     'kl',
 ]
 
@@ -71,6 +72,15 @@ def process_and_save_article(article, news_brand=""):
     data_a['news_brand'] = news_brand
     create_file(path_to_save, data = data_a)
 
+def list_to_string(str_list = []):
+    result_str = ''
+    
+    for sentence in str_list:
+        result_str += sentence
+        result_str += ';;;'
+
+    return result_str
+
 
 def get_serialized_article_obj(article):
     s_a = {}
@@ -91,13 +101,16 @@ def get_serialized_article_obj(article):
     s_a['source_url'] = article.source_url
 
     #the original summary from text_teaser
-    s_a['text_teaser_summary'] = [sentence for sentence in article.summary.split('\n')]
+    s_a['text_teaser_summary'] = list_to_string(str_list = [sentence for sentence in article.summary.split('\n')])
     
     #get geoLocation
     s_a['geoLocation'] = geoEx.get_locations(
             input_str = article.text, 
             num_of_locations = 3)
-    
+
+    #generate uuid 
+    s_a['unique_id'] = uuid.uuid4().hex
+
     #get other summaries
     for method in SUMMARY_METHODS_LIST:
         temp_summary = sumEx.get_summary(
@@ -106,7 +119,7 @@ def get_serialized_article_obj(article):
             language = 'english',
             num_of_sentences = 5)
 
-        s_a[method+'_summary'] = [sentence._text for sentence in temp_summary]
+        s_a[method+'_summary'] = list_to_string(str_list = [sentence._text for sentence in temp_summary])
 
     return s_a
 
@@ -127,7 +140,7 @@ def get_path_to_save(article):
     t = article.publish_date
     filename = get_article_filename(article.title)
     #the base path
-    path_to_save = './data'
+    path_to_save = '/home/zhengzhenggao/ServerWeb/articles/original'
     
     path_to_save = os.path.join(path_to_save, str(t.year))
     path_to_save = os.path.join(path_to_save, str(t.month))
@@ -161,7 +174,7 @@ def generate_article_key(article):
 def to_json(obj):
     if isinstance(obj, datetime.datetime):
         return {'__class__': 'datetime',
-                '__value__': obj.isoformat()}
+                '__value__': obj.strftime("%Y-%m-%d")}
     elif isinstance(obj, set):
         return list(obj)
     
