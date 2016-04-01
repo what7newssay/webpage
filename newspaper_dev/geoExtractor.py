@@ -4,6 +4,19 @@ import nltk
 from newspaper import Article
 from nltk.tag import StanfordNERTagger
 from collections import Counter
+import csv
+import re
+#load the dictionary
+country_adj_to_noun_dict = {}
+
+with open('./geo_data/cow.csv', 'r') as f:
+	reader = csv.DictReader(f)
+	for row in reader:
+		adj = row['BGN_demomyn_adj']
+		noun = row['ISOen_proper']
+		country_adj_to_noun_dict[adj] = noun
+
+
 
 class Extractor(object):
 	def __init__(self, text=None, url=None):
@@ -22,12 +35,32 @@ class Extractor(object):
 		return entities
 	
 	def find_entities(self):
+		GPE_list = []
 		entities = self.named_entities()
 		for ne in entities:
 			if type(ne) is nltk.tree.Tree:
 				#['GPE', 'PERSON', 'ORGANIZATION']
 				if ne.label() in ['GPE']:
-					self.places.append(u' '.join(i[0] for i in ne.leaves()))
+					GPE_list.append(u' '.join(i[0] for i in ne.leaves()))
+
+		#convert country's adjective to noun
+		for GPE in GPE_list:
+			temp = GPE
+			if temp in country_adj_to_noun_dict.keys():
+				temp = country_adj_to_noun_dict[GPE]
+			self.places.append(temp) 
+
+		#only country is selected
+		"""
+		for GPE in GPE_list:
+			temp = GPE
+			if temp in country_adj_to_noun_dict.keys():
+				temp = country_adj_to_noun_dict[GPE]
+				self.places.append(temp)
+			elif temp in country_adj_to_noun_dict.values():
+				self.places.append(temp)
+		"""
+			
 	
 	def get_entities_with_count(self):
 		entities_count = Counter()
@@ -37,7 +70,7 @@ class Extractor(object):
 		return entities_count
 
 
-def get_locations(input_str, num_of_locations = 3):
+def get_locations(input_str, num_of_locations = 1):
 	extractor = Extractor(text = input_str)
 	extractor.find_entities()
 	ranks = extractor.get_entities_with_count().most_common(num_of_locations)
@@ -49,10 +82,7 @@ def get_locations(input_str, num_of_locations = 3):
 
 
 if __name__ == '__main__':
-	url = 'http://lens.blogs.nytimes.com/2016/02/19/robert-james-campbell-jessica-ferber-rebirth-of-the-cool/?module=BlogPost-Title&version=Blog Main&contentCollection=Multimedia&action=Click&pgtype=Blogs&region=Body'
-	a = Article(url)
-	a.download()
-	a.parse()
-	extractor = Extractor(text=a.text)
-	extractor.find_entities()
-	print (extractor.places)
+	t = "I Greece Greek Chinese Chinese Greek Chinese Greek Greece Chinese EU EU EU China"
+	location = get_locations(t)
+	print (location)
+

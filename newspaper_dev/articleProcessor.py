@@ -51,8 +51,15 @@ def clean_text(text, target = 'text'):
         text = re.sub(regex, '', text)
     return text
     
-def clean_img():
-    pass
+def clean_img(img_list):
+    new_img_list = []
+    for img_url in img_list:
+        new_img_list.append(clean_text(img_url, target = 'image'))
+
+    #get rid of the non-empty string
+    new_img_list = [img_url for img_url in new_img_list if img_url]
+
+    return new_img_list
 
 def process_and_save_article(article, news_brand=""):
     #set publish_date in case of None
