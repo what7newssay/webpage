@@ -8,22 +8,31 @@ title					MEDIUMTEXT
 path					MEDIUMTEXT
 keywords_title			MEDIUMTEXT
 keywords_complex		MEDIUMTEXT	
-publish_date				DATE
+publish_date			DATE
 geolocation				MEDIUMTEXT
 image_top				MEDIUMTEXT
 images					MEDIUMTEXT
 keywordsRaw				MEDIUMTEXT
 topicID					VARCHAR(32)
+news_brand				TINYTEXT
 
 ********************************************
 
 Table :: summarizedArt
 uniqueID				VARCHAR(32)
 title					MEDIUMTEXT
-content					LONGTEXT			
+text_teaser_summary		LONGTEXT			
 topicID					VARCHAR(32)
 similarity				DOUBLE
 updateDate				DATE
+lsa_summary				LONGTEXT
+lex_rank_summary		LONGTEXT
+edmundson_summary		LONGTEXT
+sum_basic_summary		LONGTEXT
+luhn_summary			LONGTEXT
+text_rank_summary		LONGTEXT
+kl_summary				LONGTEXT
+click_count				INT
 
 ********************************************
 
@@ -36,3 +45,7 @@ entryDate				DATE
 updateDate				DATE
 +++++++++++++++++++++++++++++++++++++++++++++++++
 +++++++++++++++++++++++++++++++++++++++++++++++++
+
+Remark:
+topic  needs  geoloaction 
+*add more attribute for other summaries*	Done
