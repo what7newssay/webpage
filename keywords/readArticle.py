@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import serverConfiguration
 import mysql.connector
 import io
 import json
@@ -10,12 +11,20 @@ from sqlalchemy import func
 import uuid
 import keywordsExtractor
 
+#################################################################################
+# Database variable
+DBuser =  serverConfiguration.DBuser
+DBpass = serverConfiguration.DBpass
+DBhost = serverConfiguration.DBhost
+#################################################################################
 
-class NewsReader:
-	# Global status for analyze 
-	totalNewsRead = 0;
-	# The following variable will limit the current year to a certain year's news
-	yearLimit = 2014;
+yearLimit = serverConfiguration.yearLimit
+
+
+
+# Global status for analyze 
+totalNewsRead = 0;
+totalNewsAdded = 0
 
 def dataString(str):
 	tempStr ='"'
@@ -25,8 +34,8 @@ def dataString(str):
 
 def dbconnect():
 # 	try:
-		cnx =  mysql.connector.connect(user='WebAdmin', password='helloworld7',
-                                 host='127.0.0.1',
+		cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
                                  database='NewsDatabase')
  		print "Database connection successful!"
 		return cnx
@@ -44,11 +53,12 @@ def updateDB(data, path):
 	newsDBcursor = newsDB.cursor()
 	uniqueID = data['unique_id']
 	print uniqueID
-	checkQuery = ("""SELECT uniqueID FROM originalArt WHERE uniqueID = %s;""")
+	checkQuery = ("""SELECT * FROM originalArt WHERE uniqueID = %s;""")
 	newsDBcursor.execute(checkQuery, (uniqueID,))
-	selectData = newsDBcursor.fetchall()
+	selectData = newsDBcursor.fetchone()
 # 	numCount = len(selectData)
 # 	print numCount
+	print selectData
 	if selectData:
 # 	for row in selectData:
 		print "Skip update>>>>>>>>>>>>>>>>>>>>This article already uploaded to database"
@@ -65,7 +75,7 @@ def updateDB(data, path):
 		keywords_title+= ","
 	
 	keywordsTextData = keywordsExtractor.extractKeyphrases(data['text'])
-	keywordsComplexData = (keywordsTitleData + keywordsExtractor.ifin(keywordsTextData,keywordsTitleData))
+	keywordsComplexData = keywordsExtractor.ifin(keywordsTextData,keywordsTitleData)
 	keywordsComplex = ""
 	for each in keywordsExtractor.makeSingleString(keywordsComplexData):
 		keywordsComplex+= re.sub('[^0-9a-zA-Z\,\s]+','', each)
@@ -93,6 +103,7 @@ def updateDB(data, path):
 		images += each
 		images +=","
 		
+		news_brand = data['news_brand']
 # 	biID = func.UNHEX(uniqueID)
 # 	uniqueID = func.UNHEX(uniqueID)
 # 	print title
@@ -103,9 +114,9 @@ def updateDB(data, path):
 	newsDBcursor = newsDB.cursor()
 	
 	add_article = ("""INSERT INTO NewsDatabase.originalArt """
-					"""(uniqueID, title, path, keywords_title, keywords_complex, publish_date, geolocation, image_top, images, keywordsRaw) """
-				"""VALUES (%s,     %s,    %s,    %s,             %s,             %s,          %s,        %s,        %s,           %s);""")
-	data_article = (uniqueID, title, path, keywords_title,keywordsComplex, publishDate, geolocation, image_top, images, keywordsRaw)
+					"""(uniqueID, title, path, keywords_title, keywords_complex, publish_date, geolocation, image_top, images, keywordsRaw, news_brand) """
+				"""VALUES (%s,     %s,    %s,    %s,             %s,             %s,          %s,        %s,        %s,           %s,        %s);""")
+	data_article = (uniqueID, title, path, keywords_title,keywordsComplex, publishDate, geolocation, image_top, images, keywordsRaw, news_brand)
 # 	add_article = ("INSERT INTO originalArt "
 #                "(uniqueID, title, path, keywords, upload_date, geolocation) "
 #                "VALUES (%s, %s, %s, %s, %s, %s)")
@@ -117,19 +128,28 @@ def updateDB(data, path):
 	newsDB.commit()
 	
 	# The following codes will update summarized articles DB
-	content = data['summary']
+# 	text_teaser_summary = data['text_teaser_summary']
+	text_teaser_summary = data['summary']	# Debug for previous data set, the previous is the real one
+# 	lsa_summary	= data['lsa_summary']
+# 	lex_rank_summary = data['lex_rank_summary']
+# 	edmundson_summary = data['edmundson_summary']
+# 	sum_basic_summary = data['sum_basic_summary']
+# 	luhn_summary = data['luhn_summary']
+# 	text_rank_summary = data['text_rank_summary']
+# 	kl_summary = data['kl_summary']
 	
 	
 	add_article_sum = ("""INSERT INTO NewsDatabase.summarizedArt """
-					"""(uniqueID, title, content) """
+					"""(uniqueID, title, text_teaser_summary) """
 				"""VALUES (%s,     %s,    %s);""")
-	data_article_sum = (uniqueID, title, content)
+	data_article_sum = (uniqueID, title, text_teaser_summary)
 	newsDBcursor.execute(add_article_sum, data_article_sum)
 	print "Update Summarized Articles DB!"
 	newsDB.commit()
 	
 	
 	newsDB.close()
+	NewsReader.totalNewsAdded += 1
 	return True
 
 def readJson(filepath):
@@ -139,7 +159,7 @@ def readJson(filepath):
 		json_data = json.load(obj)
 		if updateDB(json_data, filepath):
 			NewsReader.totalNewsRead+=1
-			json_data['DB_update'] = True
+# 			json_data['DB_update'] = True
 		obj.seek(0)
 # 		obj.write(json.dumps(json_data))
 # 		obj.truncate()
@@ -184,6 +204,7 @@ def read_news_files():
 
 
 ################################################################################################
+#	Real system running code
 # 	for year in os.listdir(folder_path_to_read):
 # 		if int(year) < NewsReader.yearLimit:
 # 			continue
@@ -213,7 +234,7 @@ def read_news_files():
 
 def printStatus():
 	print "The total number of news read is ", NewsReader.totalNewsRead	
-
+	print 'The new news added to database is ', NewsReader.totalNewsAdded
 
 def main():
 	read_news_files()
