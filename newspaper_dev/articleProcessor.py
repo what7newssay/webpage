@@ -107,27 +107,32 @@ def get_serialized_article_obj(article):
     s_a['publish_date'] = article.publish_date
     s_a['source_url'] = article.source_url
 
-    #the original summary from text_teaser
-    s_a['text_teaser_summary'] = list_to_string(str_list = [sentence for sentence in article.summary.split('\n')])
-    
-    #get geoLocation
-    s_a['geoLocation'] = geoEx.get_locations(
-            input_str = article.text, 
-            num_of_locations = 3)
-
     #generate uuid 
     s_a['unique_id'] = uuid.uuid4().hex
 
+    #the original summary from text_teaser
+    s_a['text_teaser_summary'] = list_to_string(str_list = [sentence for sentence in article.summary.split('\n')])
+    
+    #get geoLocation, it is in dict type
+    location_and_latlog = geoEx.get_locations_and_latlog(input_str = article.text, num_of_locations = 3)
+
+    s_a['geoLocation'] = [loc for loc in location_and_latlog.keys()]
+    s_a['geoLocation_latlog'] = [loc for loc in location_and_latlog.values()]
+
+
+
     #get other summaries
     for method in SUMMARY_METHODS_LIST:
-        temp_summary = sumEx.get_summary(
-            summarize_method = method,
-            input_str = article.text,
-            language = 'english',
-            num_of_sentences = 5)
+        try:
+            temp_summary = sumEx.get_summary(
+                summarize_method = method,
+                input_str = article.text,
+                language = 'english',
+                num_of_sentences = 5)
 
-        s_a[method+'_summary'] = list_to_string(str_list = [sentence._text for sentence in temp_summary])
-
+            s_a[method+'_summary'] = list_to_string(str_list = [sentence._text for sentence in temp_summary])
+        except:
+            pass
     return s_a
 
 
@@ -147,7 +152,9 @@ def get_path_to_save(article):
     t = article.publish_date
     filename = get_article_filename(article.title)
     #the base path
-    path_to_save = '/home/zhengzhenggao/ServerWeb/articles/original'
+
+    #path_to_save = '/home/zhengzhenggao/ServerWeb/articles/original'
+    path_to_save = './data'
     
     path_to_save = os.path.join(path_to_save, str(t.year))
     path_to_save = os.path.join(path_to_save, str(t.month))
@@ -189,9 +196,13 @@ def to_json(obj):
 
 def test():
     url = 'http://www.bbc.com/news/world-europe-35828810'
-    a = Article(url)
-    a.build()
-    process_and_save_article(a, 'bbc')
+    #url = 'http://www.bbc.com/hindi/sport/2016/02/160227_heart_change_for_kohli_fan_dil'
+    try:
+        a = Article(url)
+        a.build()
+        process_and_save_article(a, 'bbc')
+    except:
+        print ("error detected")
 
 if __name__ == '__main__':
     test()

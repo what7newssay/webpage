@@ -6,6 +6,11 @@ from nltk.tag import StanfordNERTagger
 from collections import Counter
 import csv
 import re
+from geopy.geocoders import Nominatim
+
+#load the geolocator
+geolocator = Nominatim()
+
 #load the dictionary
 country_adj_to_noun_dict = {}
 
@@ -69,8 +74,24 @@ class Extractor(object):
 
 		return entities_count
 
+def get_locations_and_latlog(input_str, num_of_locations = 3):
+	extractor = Extractor(text = input_str)
+	extractor.find_entities()
+	ranks = extractor.get_entities_with_count().most_common(num_of_locations)
+	
+	location_and_latlog_dict = {}
 
-def get_locations(input_str, num_of_locations = 1):
+	for rank in ranks:
+		loc = rank[0]
+		location = geolocator.geocode(loc)
+		if location:
+			#print (loc)
+			location_and_latlog_dict[loc] = '{0},{1}'.format(location.latitude, location.longitude)
+
+
+	return location_and_latlog_dict
+
+def get_locations(input_str, num_of_locations = 3):
 	extractor = Extractor(text = input_str)
 	extractor.find_entities()
 	ranks = extractor.get_entities_with_count().most_common(num_of_locations)
@@ -79,10 +100,27 @@ def get_locations(input_str, num_of_locations = 1):
 		locations.append(rank[0])
 	return locations
 
+def get_locations_latlog(input_str = None, locs_list = None, num_of_locations = 3):
+	if (input_str is None) & (locs_list is None):
+		return []
+	elif (input_str is not None) & (locs_list is None) :
+		locs_list = get_locations(input_str = input_str, num_of_locations = num_of_locations)
+	
+	#if the list is empty 
+	if not locs_list:
+		return []
+
+	lat_log_list = []
+	for loc in locs_list:
+		location = geolocator.geocode(loc)
+		lot_log_str = '{0},{1}'.format(location.latitude, location.longitude)
+		lat_log_list.append(lot_log_str)
+
+	return lat_log_list
 
 
 if __name__ == '__main__':
-	t = "I Greece Greek Chinese Chinese Greek Chinese Greek Greece Chinese EU EU EU China"
-	location = get_locations(t)
+	t = "Ray is Washingtong"
+	location = get_locations_and_latlog(t)
 	print (location)
 
