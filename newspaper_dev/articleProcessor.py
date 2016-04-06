@@ -24,9 +24,9 @@ LIST_OF_USELESS_TEXT_REGEX = [
     ]
     
 LIST_OF_IMG_USELESS_REGEX = [
-    'static\.bbci\.co\.uk.*',
-    'edition\.i\.cdn\.cnn\.com.*',
-    'ewn\.co\.za/site/design.*',
+    'http://static\.bbci\.co\.uk.*',
+    'http://edition\.i\.cdn\.cnn\.com.*',
+    'http://ewn\.co\.za/site/design.*',
 ]
 
 CLEAN_TARGET_LIST = {
@@ -114,10 +114,11 @@ def get_serialized_article_obj(article):
     s_a['text_teaser_summary'] = list_to_string(str_list = [sentence for sentence in article.summary.split('\n')])
     
     #get geoLocation, it is in dict type
-    location_and_latlog = geoEx.get_locations_and_latlog(input_str = article.text, num_of_locations = 3)
+    #location_and_latlog = geoEx.get_locations_and_latlog(input_str = article.text, num_of_locations = 3)
+    #s_a['geoLocation'] = [loc for loc in location_and_latlog.keys()]
+    #s_a['geoLocation_latlog'] = [loc for loc in location_and_latlog.values()]
 
-    s_a['geoLocation'] = [loc for loc in location_and_latlog.keys()]
-    s_a['geoLocation_latlog'] = [loc for loc in location_and_latlog.values()]
+    s_a['geoLocation'] = geoEx.get_locations(input_str = article.text, num_of_locations = 3)
 
 
 
