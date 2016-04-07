@@ -7,9 +7,23 @@ import string
 import operator
 import codecs
 
+def read_filter_word_file():
+    file = open('./filterWords','r')
+    redundantList = []
+    for line in file:
+        if line:
+            redundantList.append(line.replace('\n',''))
+    return redundantList
+
+
 #apply syntactic filters based on POS tags         #, 'VBD','VBG','VBN'
 def filter_for_tags(tagged, tags=['NN', 'NNP', 'NNS', 'VB']):
-    return [item for item in tagged if item[1] in tags]
+    tempList = [item for item in tagged if item[1] in tags]
+    redundantList = read_filter_word_file()
+    for item in tempList:
+        if item[0] in redundantList:
+               tempList.remove(item)
+    return tempList
 
 def remove_question_word(list):
     question_word = ["Can","Could","Will","Would","Shall","May", "What","Who","Where","When","Why","Which","How"]
@@ -186,9 +200,14 @@ def extractKeyphrases(text):
     
     #sort the freqDict and return a list, smaller no. in front
     sortedList = sorted(positionDict.items(), key=operator.itemgetter(1)) #sortedList=sorted(freqDict.items(), key=lambda t: t[0])
-   
+    
+#     print 'extractKeyphrases-> Debug: sortedList: '
+#     print sortedList
+
+    if not sortedList:
+        return []
     max = sortedList[-1][1]
-    min = sortedList[1][1]
+    min = sortedList[0][1]
     denominator = max - min
     #normalizedScore = {(token,normalized_score)}
     for i in range(len(sortedList)):
@@ -211,7 +230,6 @@ def extractKeyphrases(text):
     #uni-grams keywords
     unigram = [each[0] for each in freqKey] 
     unigram.reverse()
-    
     return unigram
 
 def ngrams(unigram, bigram, trigram):
