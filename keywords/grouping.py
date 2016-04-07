@@ -9,6 +9,7 @@ import keywordsComparator
 import mysql.connector
 import datetime
 import serverConfiguration
+import readArticle
 
 #################################################################################
 # Database variable
@@ -624,7 +625,7 @@ def refresh_topic_table():
                                  database='NewsDatabase')
     print "refresh_topic_table->Database connection successful!"
     newsDBcursor = cnx.cursor()
-    checkQuery = ("""SELECT * FROM summarizedArt WHERE (topicID!='FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');""")
+    checkQuery = ("""SELECT * FROM summarizedArt WHERE (topicID!='FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' AND topicID!='"UNDEFINE"');""")
     newsDBcursor.execute(checkQuery)
     summarizedArt = newsDBcursor.fetchall()
     #    Check if no articles at all
@@ -635,6 +636,7 @@ def refresh_topic_table():
     # Topic data is list, [[topicID, num_of_articles],[topicID, num_of_articles],..]
         topic_data = []
         for each in summarizedArt:
+            
             cur_topicID = each[3]
             found_enrty = False
             for each_topic in topic_data:
@@ -714,6 +716,40 @@ def refresh_topic_table():
     print 'refresh_topic_table-> Finish deleting junk entry from topic table'
     return
 
+def refresh_group_art_location():
+    grouped_art_list = get_group_art()
+    if not grouped_art_list:
+        print 'refresh_group_art_location-> (Start) No grouped article, terminate this function'
+        return
+    for each in grouped_art_list:
+        if each[12]:
+            print 'refresh_group_art_location-> (Check) This artile has location, skip it'
+            continue
+        print 'refresh_group_art_location-> (Process) No location for this article, processing it'
+        location = get_topic_location(each[0], each[10])
+        
+        if not location:
+            print 'refresh_group_art_location-> (Process) There is no location for this topic: ', each[10]
+            continue
+        
+        print 'refresh_group_art_location-> (Update) Found location for this article: ', each[0], ' @ ', location
+        
+        cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
+                                 database='NewsDatabase')
+        print "refresh_group_art_location-> Database connection successful!"
+        newsDBcursor = cnx.cursor()
+        updateQuery = ("""UPDATE originalArt SET location = %s WHERE uniqueID = %s;""")
+        try:
+            newsDBcursor.execute(checkQuery, (location, each[0]))
+            cnx.commit()
+            print 'refresh_group_art_location-> (UPDATE) SUCCESSFUL'
+        except mysql.connector.Error:
+            print 'refresh_group_art_location-> (UPDATE) FAIL to update location: ', location, ' for ', each[0], ' with topic ', each[10]
+    
+    print 'refresh_group_art_location-> (FINAL) Finished checking location, end of refresh_group_art_location'
+    return
+    
 def get_topic_name(topicID):
     topic_name = ''
     #    Temporary topic name for topicID holder 's title
@@ -723,6 +759,38 @@ def get_topic_name(topicID):
     topic_name = topic_art[1]
     return topic_name
 
+def get_topic_location(uniqueID, topicID):
+    topic_art_sum_list = get_topic_art(topicID)
+    all_location_str = ''
+    for each in topic_art_sum_list:
+        cur_art = get_art_DB(each[0])
+        all_location_str += cur_art[6] + ','
+    
+    all_location_list = all_location_str.split(',')
+    geolocation_data = []
+    for each in all_location_list:
+        if not each:
+            continue
+        cur_location = each
+        found_enrty = False
+        for each_location in geolocation_data:
+            if each_location[0] == cur_location:
+                each_location[1] += 1
+                found_enrty = True
+                break
+        if not found_enrty:
+            newlist = [cur_location, 1]
+            geolocation_data.append(newlist)
+    
+    geolocation_data.sort(key = lambda x:(-x[1],x[0]))
+    ans_str = ''
+    for each_location in geolocation_data:
+        ans_str += each_location[0] + ','
+    
+    location_str = readArticle.get_location_decimal(ans_str)
+    
+    
+    return location_str
 
 def group_DB_check():
     #    Checking data consistency
@@ -731,6 +799,27 @@ def group_DB_check():
     
     for each in all_article_list:
         summarized_art = get_art_summarizedArt(each[0])
+        if not summarized_art:
+            print 'group_DB_check-> There is no article uniqueID @ ', each[0],' title @ ', each[1]
+            print 'Adding articles to summarizedTable'
+            cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
+                                 host = DBhost,
+                                 database='NewsDatabase')
+            print "group_DB_check-> Database connection successful!"
+            newsDBcursor = cnx.cursor()
+            checkQuery = ("""DELETE FROM originalArt WHERE uniqueID = %s;""")
+            try:
+                newsDBcursor.execute(checkQuery, (each[0],))
+                cnx.commit()
+                print 'group_DB_check-> Delete article from originalArt successful~ uniqueID @ ', each[0]
+            except mysql.connector.Error as e:
+                    print("Something went wrong: {}".format(e))
+                    print 'group_DB_check -> Delete article from originalArt for ',each[0],' FAILED!!!!!'
+            print 'group_DB_check -> Importing new articles'      
+            readArticle.main() 
+            print 'group_DB_check -> Finish importing'
+        #    Retry to get summarized_art
+        summarized_art = get_art_summarizedArt(each[0])          
         if each[10] != summarized_art[3]:
             print 'group_DB_check-> Ori and Sum topicID different! Need repair'
             cnx =  mysql.connector.connect(user = DBuser, password = DBpass,
@@ -754,6 +843,9 @@ def group_DB_check():
 def group_art_new():
     #    The function to group all new articles, resort them into exist topic if available
     #    One time program, all article are sorted after this process
+    #    Check database inconsistency
+    group_DB_ultimate_check()
+    #
     ungroupArt = get_ungroup_art(force_group = True)
     if len(ungroupArt)==0:
         print 'group_art_new->No new news articles found!'
@@ -891,6 +983,7 @@ def check_art_group_sim(uniqueID, topicID):
 def group_DB_ultimate_check():
     group_DB_check()
     refresh_topic_table()
+    refresh_group_art_location()
     return
 
 def group_art_all():

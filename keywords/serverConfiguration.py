@@ -10,8 +10,8 @@ DBhost = '192.168.169.129'
 
 #############################################
 #   The grouping precise value setting
-similarity_value_rough = 17
-similarity_value_precise = 20
+similarity_value_rough = 30
+similarity_value_precise = 33
 #############################################
 
 #############################################
