@@ -7,22 +7,32 @@ import string
 import operator
 import codecs
 
+
 def read_filter_word_file():
-    file = open('./filterWords','r')
+    file = codecs.open('./filterWords.txt', )
     redundantList = []
     for line in file:
         if line:
             redundantList.append(line.replace('\n',''))
     return redundantList
 
-
 #apply syntactic filters based on POS tags         #, 'VBD','VBG','VBN'
 def filter_for_tags(tagged, tags=['NN', 'NNP', 'NNS', 'VB']):
-    tempList = [item for item in tagged if item[1] in tags]
-    redundantList = read_filter_word_file()
+    tempList=[item for item in tagged if item[1] in tags]
+#     redundantVerb =['be','is','am','are','have','has','had','get']
+    redundantVerb = read_filter_word_file()
+    
     for item in tempList:
-        if item[0] in redundantList:
-               tempList.remove(item)
+#         print type(item[0])
+#         if (item[1] =='VB')and (item[0] in redundantVerb):
+#         temp_word = ''
+        temp_word = item[0].encode('utf8') #item[0].encode('utf-8')
+        for each_word in redundantVerb:
+#             cur_each_word = unicode(each_word)
+            if temp_word == each_word:
+                tempList.remove(item)
+                print 'filter_for_tags-> Found junk word, deleted'
+                break
     return tempList
 
 def remove_question_word(list):
@@ -200,10 +210,7 @@ def extractKeyphrases(text):
     
     #sort the freqDict and return a list, smaller no. in front
     sortedList = sorted(positionDict.items(), key=operator.itemgetter(1)) #sortedList=sorted(freqDict.items(), key=lambda t: t[0])
-    
-#     print 'extractKeyphrases-> Debug: sortedList: '
-#     print sortedList
-
+   
     if not sortedList:
         return []
     max = sortedList[-1][1]
@@ -230,6 +237,7 @@ def extractKeyphrases(text):
     #uni-grams keywords
     unigram = [each[0] for each in freqKey] 
     unigram.reverse()
+    
     return unigram
 
 def ngrams(unigram, bigram, trigram):
