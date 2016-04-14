@@ -10,6 +10,7 @@ import re
 import geoExtractor as geoEx
 import summaryExtractor as sumEx
 import uuid
+import math
 #from bson import json_util
 
 LIST_OF_USELESS_TEXT_REGEX = [
@@ -23,11 +24,49 @@ LIST_OF_USELESS_TEXT_REGEX = [
     'flickr.com',
     ]
     
+LIST_OF_IMG_USELESS_LIST = [
+'http://static.bbci.co.uk',
+'http://ssc.api.bbc.com',
+'http://edition.i.cdn.cnn.com',
+'http://ewn.co.za/site/design',
+'http://beacon.guim.co.uk',
+'http://i.cdn.turner.com/cnn/.element',
+'http://i.cdn.turner.com/money/.element/',
+'http://money.cnn.com/.element/',
+'http://i.cdn.turner.com/money/video/bvp/images',
+'http://i.cdn.turner.com/money/images',
+'http://i.cdn.turner.com/cnn/images',
+'https://a1.nyt.com/assets/',
+#'https://static01.nyt.com/images',
+'http://pixel.quantserve.com/pixel/',
+'http://stats.bbc.co.uk/o.gif',
+#'http://l3.yimg.com/bt/api/',
+#'http://l2.yimg.com/bt/api/',
+'http://statics.bendbulletin.com/images/',
+'http://s1.firstpost.in/wp-content',
+'http://s2.firstpost.in/wp-content',
+'http://s3.firstpost.in/wp-content',
+'https://images.washingtonpost.com',
+'https://www.washingtonpost.com/pb/resources/img',
+'http://www.rapsinews.com/i/',
+'http://rapsinews.com/i/',
+'http://www.reuters.com/resources_v2/images',
+'http://s4.reutersmedia.net/resources_v2/images',
+'http://top100-images.rambler.ru/top100/',
+'http://cms.myspacecdn.com/cms',
+'http://www.bbc.co.uk/news/special/2015/newsspec_10857/bbc_news_logo.png',
+'http://i.cdn.turner.com/cnn/.e/img/3.0/branding/logos',
+'http://i.cdn.turner.com/cnn/interactive/2014/12/us/cnn-guns-project/media/assets',
+]
+
+"""
 LIST_OF_IMG_USELESS_REGEX = [
     'http://static\.bbci\.co\.uk.*',
-    'http://edition\.i\.cdn\.cnn\.com.*',
-    'http://ewn\.co\.za/site/design.*',
+    'edition\.i\.cdn\.cnn\.com.*',
+    'ewn\.co\.za/site/design.*',
+    ''
 ]
+"""
 
 CLEAN_TARGET_LIST = {
     'text': LIST_OF_USELESS_TEXT_REGEX,
@@ -49,16 +88,23 @@ def clean_text(text, target = 'text'):
     useless_list = CLEAN_TARGET_LIST[target]
     for regex in useless_list:
         text = re.sub(regex, '', text)
+
+    #Special case
+    photos_string_regex = 'Photos[0-9a-zA-Z]+'
+    all_photos_substring = re.findall(photos_string_regex, text)
+    for noise_string in all_photos_substring:
+        clean_string = re.sub('Photos', '', noise_string)
+        text = re.sub(noise_string, clean_string, text)
+
     return text
     
 def clean_img(img_list):
-    new_img_list = []
-    for img_url in img_list:
-        new_img_list.append(clean_text(img_url, target = 'image'))
-
     #get rid of the non-empty string
-    new_img_list = [img_url for img_url in new_img_list if img_url]
-
+    useless_img_list = [img_url for useless_img_url in LIST_OF_IMG_USELESS_LIST 
+                        for img_url in img_list if img_url.startswith(useless_img_url)]
+    
+    new_img_list = list(set(img_list).difference(set(useless_img_list)))
+    
     return new_img_list
 
 def process_and_save_article(article, news_brand=""):
@@ -89,9 +135,34 @@ def list_to_string(str_list = []):
     return result_str
 
 
+def get_score(article = None):
+    if article:
+        
+        num_of_words = len(article.text.split())
+        num_of_imgs = len(article.images)
+        initial_quantity = num_of_words + 20*num_of_imgs #the weighting can be changed later on
+
+        #get the time difference
+        time_passed = datetime.datetime.now() - article.publish_date
+        time_passed_in_day = time_passed.days
+        
+        #score function is a*e^(-t/2)
+        decay_factor = math.exp((-1)*(time_passed_in_day)/2) #decay rate can be changed later
+
+        score = initial_quantity*decay_factor
+
+        return score
+    else:
+        return 0
+
+
 def get_serialized_article_obj(article):
     s_a = {}
     
+    #dumy -> avoid null key
+    for method in SUMMARY_METHODS_LIST:
+        s_a[method+'_summary'] = ''
+
     #serialized the attributes from the article class itself
     s_a['url'] = article.url
     s_a['title'] = article.title
@@ -110,7 +181,11 @@ def get_serialized_article_obj(article):
     #generate uuid 
     s_a['unique_id'] = uuid.uuid4().hex
 
+    #calculate the score of this article
+    s_a['importanceness'] = get_score(article)
+
     #the original summary from text_teaser
+    s_a['text_teaser_summary'] = ''
     s_a['text_teaser_summary'] = list_to_string(str_list = [sentence for sentence in article.summary.split('\n')])
     
     #get geoLocation, it is in dict type
@@ -118,13 +193,14 @@ def get_serialized_article_obj(article):
     #s_a['geoLocation'] = [loc for loc in location_and_latlog.keys()]
     #s_a['geoLocation_latlog'] = [loc for loc in location_and_latlog.values()]
 
+    #only the location
     s_a['geoLocation'] = geoEx.get_locations(input_str = article.text, num_of_locations = 3)
-
 
 
     #get other summaries
     for method in SUMMARY_METHODS_LIST:
         try:
+            s_a[method+'_summary'] = ''
             temp_summary = sumEx.get_summary(
                 summarize_method = method,
                 input_str = article.text,
