@@ -59,14 +59,13 @@ LIST_OF_IMG_USELESS_LIST = [
 'http://i.cdn.turner.com/cnn/interactive/2014/12/us/cnn-guns-project/media/assets',
 ]
 
-"""
+
 LIST_OF_IMG_USELESS_REGEX = [
     'http://static\.bbci\.co\.uk.*',
     'edition\.i\.cdn\.cnn\.com.*',
     'ewn\.co\.za/site/design.*',
-    ''
 ]
-"""
+
 
 CLEAN_TARGET_LIST = {
     'text': LIST_OF_USELESS_TEXT_REGEX,
@@ -119,6 +118,9 @@ def process_and_save_article(article, news_brand=""):
     article.text = clean_text(text = article.text, target = 'text')
     article.summary = clean_text(text = article.summary)
 
+    #clean article image
+    article.images = clean_img(article.images)
+
     #save the file
     path_to_save = get_path_to_save(article)
     data_a = get_serialized_article_obj(article)
@@ -140,11 +142,12 @@ def get_score(article = None):
         
         num_of_words = len(article.text.split())
         num_of_imgs = len(article.images)
-        initial_quantity = num_of_words + 20*num_of_imgs #the weighting can be changed later on
+        initial_quantity = num_of_words + 50*num_of_imgs #the weighting can be changed later on
 
         #get the time difference
         time_passed = datetime.datetime.now() - article.publish_date
         time_passed_in_day = time_passed.days
+        print (time_passed_in_day)
         
         #score function is a*e^(-t/2)
         decay_factor = math.exp((-1)*(time_passed_in_day)/2) #decay rate can be changed later
