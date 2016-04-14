@@ -15,6 +15,7 @@ images					MEDIUMTEXT
 keywordsRaw				MEDIUMTEXT
 topicID					VARCHAR(32)
 news_brand				TINYTEXT
+location				VARCHAR(111)
 
 ********************************************
 
@@ -44,6 +45,11 @@ score					INT
 entryDate				DATE
 updateDate				DATE
 +++++++++++++++++++++++++++++++++++++++++++++++++
+
+Table :: similarityRecord
+uniqueID1				VARCHAR(32)
+uniqueID2				VARCHAR(32)
+similarity  			DOUBLE
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 Remark:
