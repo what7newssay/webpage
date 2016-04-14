@@ -50,8 +50,9 @@ Table :: similarityRecord
 uniqueID1				VARCHAR(32)
 uniqueID2				VARCHAR(32)
 similarity  			DOUBLE
+valid					INT
+recordID				INT(AI)
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
 Remark:
 topic  needs  geoloaction 
-*add more attribute for other summaries*	Done
