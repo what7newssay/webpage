@@ -130,7 +130,7 @@ def get_topic_name(title,all_content_keywords):
         longestNgram = ""
 
     freq={}
-    common_uni =""
+    common_uni =[]
     if len(list_uni)>0 :
         for i in list_uni:
             for j in i:
@@ -141,12 +141,12 @@ def get_topic_name(title,all_content_keywords):
         if len(freqList2)>0:
             for i in freqList2:
                 if (i[0] not in longestNgram) and (i[1] >= len(title)/2):
-                    common_uni= common_uni + ',' + i[0]
-                    
+                    common_uni.append(i[0])
+
     if longestNgram:
-        name = longestNgram + common_uni
+        name = longestNgram +","+ ",".join(common_uni)
     else:
-        name = common_uni
+        name = ",".join(common_uni)
 
     return name
 
