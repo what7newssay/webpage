@@ -139,8 +139,8 @@ def get_topic_name(title,all_content_keywords):
         freqList2 =sorted(freq.items(), key=operator.itemgetter(1))
         freqList2.reverse()
         if len(freqList2)>0:
-            for i in freqList2:
-                if (i[0] not in longestNgram) and (i[1] >= len(title)/2):
+            for i in freqList2[0:5]:
+                if (i[0] not in longestNgram):
                     common_uni.append(i[0])
 
     if longestNgram:
